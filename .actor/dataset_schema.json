@@ -1,0 +1,162 @@
+{
+    "actorSpecification": 1,
+    "fields": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": ["object", "null"],
+                "description": "Person's name information",
+                "properties": {
+                    "fullName": {
+                        "type": ["string", "null"],
+                        "description": "Full name of the person"
+                    },
+                    "givenName": {
+                        "type": ["string", "null"],
+                        "description": "First name"
+                    },
+                    "familyName": {
+                        "type": ["string", "null"],
+                        "description": "Last name"
+                    }
+                }
+            },
+            "email": {
+                "type": ["string", "null"],
+                "description": "Email address"
+            },
+            "location": {
+                "type": ["string", "null"],
+                "description": "Person's location code"
+            },
+            "gender": {
+                "type": ["string", "null"],
+                "description": "Person's gender"
+            },
+            "geo": {
+                "type": ["object", "null"],
+                "description": "Geographic information",
+                "properties": {
+                    "city": {
+                        "type": ["string", "null"],
+                        "description": "City"
+                    },
+                    "state": {
+                        "type": ["string", "null"],
+                        "description": "State or province"
+                    },
+                    "country": {
+                        "type": ["string", "null"],
+                        "description": "Country name"
+                    },
+                    "countryCode": {
+                        "type": ["string", "null"],
+                        "description": "ISO country code"
+                    }
+                }
+            },
+            "employment": {
+                "type": ["object", "null"],
+                "description": "Employment information",
+                "properties": {
+                    "domain": {
+                        "type": ["string", "null"],
+                        "description": "Company domain"
+                    },
+                    "name": {
+                        "type": ["string", "null"],
+                        "description": "Company name"
+                    },
+                    "title": {
+                        "type": ["string", "null"],
+                        "description": "Job title"
+                    },
+                    "role": {
+                        "type": ["string", "null"],
+                        "description": "Role level (e.g., executive, senior, etc.)"
+                    },
+                    "department": {
+                        "type": ["string", "null"],
+                        "description": "Department or division"
+                    },
+                    "seniority": {
+                        "type": ["string", "null"],
+                        "description": "Seniority level"
+                    }
+                }
+            },
+            "linkedin": {
+                "type": ["object", "null"],
+                "description": "LinkedIn profile information",
+                "properties": {
+                    "handle": {
+                        "type": ["string", "null"],
+                        "description": "LinkedIn profile URL"
+                    }
+                }
+            },
+            "twitter": {
+                "type": ["object", "null"],
+                "description": "Twitter profile information",
+                "properties": {
+                    "handle": {
+                        "type": ["string", "null"],
+                        "description": "Twitter profile URL"
+                    }
+                }
+            },
+            "facebook": {
+                "type": ["object", "null"],
+                "description": "Facebook profile information",
+                "properties": {
+                    "handle": {
+                        "type": ["string", "null"],
+                        "description": "Facebook profile URL"
+                    }
+                }
+            },
+            "verification": {
+                "type": ["object", "null"],
+                "description": "Email verification information",
+                "properties": {
+                    "date": {
+                        "type": ["string", "null"],
+                        "description": "Verification date"
+                    },
+                    "status": {
+                        "type": ["string", "null"],
+                        "description": "Verification status (valid, invalid, risky, etc.)"
+                    }
+                }
+            },
+            "phone": {
+                "type": ["boolean", "null"],
+                "description": "Whether phone number is available"
+            },
+            "avatar": {
+                "type": ["string", "null"],
+                "description": "Profile picture URL"
+            },
+            "bio": {
+                "type": ["string", "null"],
+                "description": "Personal bio or description"
+            },
+            "website": {
+                "type": ["string", "null"],
+                "description": "Personal website URL"
+            },
+            "indexedAt": {
+                "type": ["string", "null"],
+                "description": "Date and time when the data was indexed"
+            },
+            "source": {
+                "type": "string",
+                "description": "Source of the enrichment data"
+            },
+            "error": {
+                "type": "string",
+                "description": "Error message if enrichment failed"
+            }
+        }
+    }
+}

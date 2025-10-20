@@ -1,0 +1,45 @@
+{
+    "title": "Tomba Clearbit-Person Actor Input",
+    "description": "Input schema for the Tomba Clearbit-Person Actor that enriches person information using the Tomba API.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "tombaApiKey": {
+            "title": "Tomba API Key",
+            "type": "string",
+            "description": "Your Tomba API key (ta_xxxx). Get it from https://app.tomba.io/api",
+            "editor": "textfield",
+            "isSecret": true,
+            "example": "ta_xxxxxxxxxxxxxxxxxxxx"
+        },
+        "tombaApiSecret": {
+            "title": "Tomba Secret Key",
+            "type": "string",
+            "description": "Your Tomba secret key (ts_xxxx). Get it from https://app.tomba.io/api",
+            "editor": "textfield",
+            "isSecret": true,
+            "example": "ts_xxxxxxxxxxxxxxxxxxxx"
+        },
+        "emails": {
+            "title": "Emails to Enrich",
+            "type": "array",
+            "description": "Array of email addresses to enrich with person information.",
+            "editor": "stringList",
+            "items": {
+                "type": "string"
+            },
+            "example": ["john@example.com", "jane@company.com", "contact@business.org"]
+        },
+        "maxResults": {
+            "title": "Maximum Results",
+            "type": "integer",
+            "description": "Maximum number of people to enrich. Default is 50.",
+            "editor": "number",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 50,
+            "example": 50
+        }
+    },
+    "required": ["tombaApiKey", "tombaApiSecret", "emails"]
+}
