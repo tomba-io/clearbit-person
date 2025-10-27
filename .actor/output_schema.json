@@ -1,0 +1,14 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "Clearbit Person Output",
+    "description": "Output from Clearbit Person Actor - comprehensive person profiles with professional and personal insights",
+    "type": "object",
+    "properties": {
+        "results": {
+            "type": "string",
+            "title": "Person Information Results",
+            "description": "Detailed person profiles with professional data and social media information",
+            "template": "{{links.apiDefaultDatasetUrl}}/items"
+        }
+    }
+}
