@@ -10,7 +10,8 @@
             "description": "Your Tomba API key (ta_xxxx). Get it from https://app.tomba.io/api",
             "editor": "textfield",
             "isSecret": true,
-            "example": "ta_xxxxxxxxxxxxxxxxxxxx"
+            "example": "ta_xxxxxxxxxxxxxxxxxxxx",
+            "prefill": "ta_xxxxxxxxxxxxxxxxxxxx"
         },
         "tombaApiSecret": {
             "title": "Tomba Secret Key",
@@ -18,7 +19,8 @@
             "description": "Your Tomba secret key (ts_xxxx). Get it from https://app.tomba.io/api",
             "editor": "textfield",
             "isSecret": true,
-            "example": "ts_xxxxxxxxxxxxxxxxxxxx"
+            "example": "ts_xxxxxxxxxxxxxxxxxxxx",
+            "prefill": "ts_xxxxxxxxxxxxxxxxxxxx"
         },
         "emails": {
             "title": "Emails to Enrich",
@@ -28,7 +30,8 @@
             "items": {
                 "type": "string"
             },
-            "example": ["john@example.com", "jane@company.com", "contact@business.org"]
+            "example": ["john@example.com", "jane@company.com", "contact@business.org"],
+            "prefill": ["john@stripe.com", "contact@tomba.io"]
         },
         "maxResults": {
             "title": "Maximum Results",
