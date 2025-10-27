@@ -190,6 +190,10 @@ The output contains comprehensive person information organized into logical sect
 - [Pricing & Limits](https://tomba.io/pricing) - Understand rate limits and costs
 - [Person Enrichment API](https://docs.tomba.io/api/enrichment#person-api) - Specific endpoint documentation
 
+## Keywords
+
+Clearbit person, person enrichment, people data, individual profiles, contact enrichment, lead enrichment, personal data, professional profiles, contact intelligence, people intelligence, person API, contact data, individual enrichment, prospect enrichment
+
 ## Support
 
 If you need any help, have questions, or encounter any issues while using Tomba.io, please don't hesitate to reach out to our support team. You can contact us via:
