@@ -190,6 +190,41 @@ The output contains comprehensive person information organized into logical sect
 - [Pricing & Limits](https://tomba.io/pricing) - Understand rate limits and costs
 - [Person Enrichment API](https://docs.tomba.io/api/enrichment#person-api) - Specific endpoint documentation
 
+## FAQ
+
+### General Questions
+
+**Q: What is person enrichment?**
+A: Person enrichment takes an email address and returns detailed information about the individual, including personal details, professional information, social profiles, and contact data.
+
+**Q: What kind of information can I get about people?**
+A: You get personal details (name, location, demographics), professional info (job title, company, experience), social media profiles, and additional contact information.
+
+**Q: How accurate is the person data?**
+A: Tomba maintains high-quality person data with regular updates. Accuracy is typically 85-95% for professional email addresses with public profiles.
+
+### Technical Questions
+
+**Q: Can I enrich any email address?**
+A: Person enrichment works best with professional/business email addresses. Personal email domains (gmail.com, yahoo.com) may return limited information.
+
+**Q: How many emails can I enrich at once?**
+A: You can process up to 1000 emails per run. For optimal performance, process 50-200 emails per batch.
+
+**Q: What if an email doesn't have public information?**
+A: Some individuals have minimal public presence or privacy-focused profiles. Results will contain whatever publicly available information exists.
+
+### Business Applications
+
+**Q: How can this help with sales personalization?**
+A: Detailed person profiles enable highly personalized outreach, better conversation starters, and more relevant value propositions based on role and background.
+
+**Q: Is this useful for recruitment?**
+A: Yes! Understand candidate backgrounds, skills, experience levels, and professional interests to tailor recruitment approaches and assess fit.
+
+**Q: Can I use this for customer success?**
+A: Absolutely! Understanding customer contacts' roles, backgrounds, and preferences helps provide more personalized service and support.
+
 ## Keywords
 
 Clearbit person, person enrichment, people data, individual profiles, contact enrichment, lead enrichment, personal data, professional profiles, contact intelligence, people intelligence, person API, contact data, individual enrichment, prospect enrichment
