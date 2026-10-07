@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { after, afterEach, describe, it } from 'node:test';
 
 import type { MockHandler, MockServer } from './helpers.js';
-import { removeStorage, runActor, startMockTomba, totalCharges } from './helpers.js';
+import { removeStorage, runActor, startMockTomba, startStandbyActor, totalCharges } from './helpers.js';
 
 function profile(email: string) {
     return {
@@ -263,5 +263,125 @@ describe('clearbit-person', () => {
         const result = await run({ input: { domains: ['stripe.com'] }, endpoint: server.url });
         assert.notEqual(result.code, 0);
         assert.equal(server.requests.length, 0);
+    });
+});
+
+describe('clearbit-person standby (real-time API)', () => {
+    it('answers the readiness probe and a bare GET with usage info', async () => {
+        const server = await mock();
+        const actor = await startStandbyActor({ endpoint: server.url });
+        try {
+            const probe = await actor.call('/', { headers: { 'x-apify-container-server-readiness-probe': '1' } });
+            assert.equal(probe.status, 200);
+            const usage = await actor.call('/');
+            assert.equal(usage.status, 200);
+            assert.match(String(usage.body.usage), /GET/);
+            assert.equal(server.requests.length, 0);
+        } finally {
+            await actor.stop();
+        }
+    });
+
+    it('looks up emails from GET query parameters and charges per billable email', async () => {
+        const server = await mock();
+        const actor = await startStandbyActor({ endpoint: server.url });
+        let stopped;
+        try {
+            const res = await actor.call('/?email=%20John@Stripe.com&email=empty@example.com');
+            assert.equal(res.status, 200);
+            const items = res.body.items as Record<string, unknown>[];
+            assert.equal(items.length, 2);
+            assert.deepEqual(
+                items.find((i) => i.email === 'john@stripe.com'),
+                {
+                    ...profile('john@stripe.com'),
+                    email: 'john@stripe.com',
+                    source: 'tomba_person_enrichment',
+                    charged: true,
+                    cached: false,
+                },
+            );
+            assert.equal(items.find((i) => i.email === 'empty@example.com')?.error, 'No data found');
+            assert.deepEqual(
+                server.requests.map((r) => r.query.email).sort(),
+                ['empty@example.com', 'john@stripe.com'].sort(),
+            );
+        } finally {
+            stopped = await actor.stop();
+        }
+        assert.deepEqual(stopped.chargeCounts, { 'tomba-request': 1 });
+    });
+
+    it('accepts a POST with the same JSON input as a normal run', async () => {
+        const server = await mock();
+        const actor = await startStandbyActor({ endpoint: server.url });
+        try {
+            const res = await actor.call('/', { body: { emails: ['a@a.com', 'b@b.com', 'c@c.com'], maxResults: 2 } });
+            assert.equal(res.status, 200);
+            assert.equal((res.body.items as unknown[]).length, 2);
+            assert.equal(server.requests.length, 2);
+        } finally {
+            await actor.stop();
+        }
+    });
+
+    it('serves repeated requests from the cache for free', async () => {
+        const server = await mock();
+        const actor = await startStandbyActor({ endpoint: server.url });
+        let stopped;
+        try {
+            await actor.call('/?email=john@stripe.com');
+            const second = await actor.call('/?emails=john@stripe.com');
+            assert.ok((second.body.items as Record<string, unknown>[]).every((i) => i.cached === true));
+            assert.equal(server.requests.length, 1);
+        } finally {
+            stopped = await actor.stop();
+        }
+        assert.deepEqual(stopped.chargeCounts, { 'tomba-request': 1 });
+    });
+
+    it('keeps serving after a request hits maxResults', async () => {
+        const server = await mock();
+        const actor = await startStandbyActor({ endpoint: server.url });
+        try {
+            const first = await actor.call('/?emails=a@a.com,b@b.com&maxResults=1');
+            assert.equal((first.body.items as unknown[]).length, 1);
+            const second = await actor.call('/?email=c@c.com');
+            assert.equal((second.body.items as unknown[]).length, 1);
+            assert.equal(server.requests.length, 2);
+        } finally {
+            await actor.stop();
+        }
+    });
+
+    it('rejects invalid input with 400 and unknown paths with 404', async () => {
+        const server = await mock();
+        const actor = await startStandbyActor({ endpoint: server.url });
+        try {
+            const empty = await actor.call('/', { body: {} });
+            assert.equal(empty.status, 400);
+            assert.match(String(empty.body.error), /at least one email/);
+            assert.equal((await actor.call('/', { body: 'not json' })).status, 400);
+            assert.equal((await actor.call('/?maxResults=abc&email=a@a.com')).status, 400);
+            assert.equal((await actor.call('/nope')).status, 404);
+            assert.equal((await actor.call('/', { method: 'DELETE' })).status, 405);
+            assert.equal(server.requests.length, 0);
+        } finally {
+            await actor.stop();
+        }
+    });
+
+    it('returns 402 once the max charge limit is reached', async () => {
+        const server = await mock();
+        const actor = await startStandbyActor({ endpoint: server.url, maxTotalChargeUsd: 1 });
+        try {
+            const first = await actor.call('/?email=a@a.com');
+            assert.equal(first.status, 200);
+            const second = await actor.call('/?email=b@b.com');
+            assert.equal(second.status, 402);
+            assert.equal(server.requests.length, 1);
+        } finally {
+            await actor.stop();
+        }
     });
 });

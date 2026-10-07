@@ -1,71 +1,69 @@
-import { Actor, log } from 'apify';
+import { log } from 'apify';
 import { Enrichment } from 'tomba';
 
+import { InputError, queryInt, queryList, runActor } from './standby.js';
 import type { RunOptions } from './tomba.js';
-import { callTomba, logSummary, normalizeEmail, runPool, setupTomba, unique, useRunState } from './tomba.js';
+import { callTomba, getClient, normalizeEmail, runPool, unique } from './tomba.js';
 
 interface ActorInput extends RunOptions {
-    emails: string[];
+    emails?: string[];
     maxResults?: number;
 }
 
 const SOURCE = 'tomba_person_enrichment';
 
-await Actor.init();
+await runActor<ActorInput>({
+    title: 'Clearbit Person',
+    count: (input) => Math.min(unique((input.emails ?? []).map(normalizeEmail)).length, input.maxResults ?? 50),
+    fromQuery: (query) => ({
+        emails: queryList(query, 'email', 'emails'),
+        maxResults: queryInt(query, 'maxResults'),
+    }),
+    run: async (input, { push, isDone, markDone, standby }) => {
+        if (!input.emails?.length) throw new InputError('Input must contain at least one email in "emails".');
 
-const input = await Actor.getInput<ActorInput>();
-if (!input?.emails?.length) {
-    await Actor.fail('Input must contain at least one email in "emails".');
-}
+        const maxResults = input.maxResults ?? 50;
+        const enrichment = new Enrichment(getClient());
 
-const { emails: rawEmails, maxResults = 50, ...runOptions } = input!;
-const client = await setupTomba(runOptions);
-const enrichment = new Enrichment(client);
-const state = await useRunState();
+        // Each email yields one item, so maxResults caps the number of emails processed.
+        const emails = unique(input.emails.map(normalizeEmail)).slice(0, maxResults);
+        const pending = emails.filter((email) => !isDone(email));
+        if (pending.length < emails.length) {
+            log.info(`Resuming: ${emails.length - pending.length} emails already processed.`);
+        }
+        if (!standby) log.info(`Enriching person data for ${pending.length} emails`);
 
-// Each email yields one dataset item, so maxResults caps the number of emails processed.
-const emails = unique(rawEmails.map(normalizeEmail)).slice(0, maxResults);
-const pending = emails.filter((email) => !state.done[email]);
-if (pending.length < emails.length) {
-    log.info(`Resuming: ${emails.length - pending.length} emails already processed.`);
-}
+        await runPool(pending, async (email) => {
+            const res = await callTomba('person', { email }, async () => enrichment.person(email));
+            if (res.skipped) return;
 
-const startedAt = Date.now();
-log.info(`Enriching person data for ${pending.length} emails`);
+            const data = res.data as Record<string, unknown> | null | undefined;
+            const hasData = !res.error && typeof data === 'object' && data !== null && Object.keys(data).length > 0;
 
-await runPool(pending, async (email) => {
-    const res = await callTomba('person', { email }, async () => enrichment.person(email));
-    if (res.skipped) return;
+            if (hasData) {
+                await push({
+                    ...data,
+                    email,
+                    source: SOURCE,
+                    charged: res.charged,
+                    cached: res.cached,
+                });
+                log.info(
+                    `${email}: found ${String((data.name as { fullName?: string } | undefined)?.fullName ?? 'Unknown Person')}${res.cached ? ' (cached)' : ''}`,
+                );
+            } else {
+                const error = res.error ?? 'No data found';
+                await push({
+                    email,
+                    source: SOURCE,
+                    charged: res.charged,
+                    cached: res.cached,
+                    error,
+                });
+                log.info(`${email}: ${error}`);
+            }
 
-    const data = res.data as Record<string, unknown> | null | undefined;
-    const hasData = !res.error && typeof data === 'object' && data !== null && Object.keys(data).length > 0;
-
-    if (hasData) {
-        await Actor.pushData({
-            ...data,
-            email,
-            source: SOURCE,
-            charged: res.charged,
-            cached: res.cached,
+            markDone(email);
         });
-        log.info(
-            `${email}: found ${String((data.name as { fullName?: string } | undefined)?.fullName ?? 'Unknown Person')}${res.cached ? ' (cached)' : ''}`,
-        );
-    } else {
-        const error = res.error ?? 'No data found';
-        await Actor.pushData({
-            email,
-            source: SOURCE,
-            charged: res.charged,
-            cached: res.cached,
-            error,
-        });
-        log.info(`${email}: ${error}`);
-    }
-
-    state.done[email] = true;
+    },
 });
-
-logSummary('Clearbit Person', emails.length, startedAt);
-
-await Actor.exit();

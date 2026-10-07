@@ -1,0 +1,367 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Tomba Clearbit Person API",
+        "version": "1.0.0",
+        "description": "Real-time API (Apify Standby mode). Enrich email addresses with person profiles (Clearbit-compatible). Each email with a person profile found costs $0.00312; emails with no data, errors and cached results are free."
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "summary": "Enrich one or more emails with person data",
+                "description": "Without query parameters, returns a short usage note (also used as the readiness probe).",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Email address to enrich. Repeat the parameter or separate values with commas for several emails.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "john@stripe.com"
+                    },
+                    {
+                        "name": "emails",
+                        "in": "query",
+                        "description": "Alias of `email`.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "john@stripe.com,contact@tomba.io"
+                    },
+                    {
+                        "name": "maxResults",
+                        "in": "query",
+                        "description": "Maximum number of emails to enrich (default 50).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 50
+                        },
+                        "example": 10
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Results"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Error"
+                    },
+                    "402": {
+                        "$ref": "#/components/responses/Error"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Enrich emails using a JSON input",
+                "description": "Accepts the same JSON input as a normal Actor run.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "emails": {
+                                        "type": "array",
+                                        "description": "Array of email addresses to enrich with person information.",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": ["john@stripe.com", "contact@tomba.io"]
+                                    },
+                                    "maxResults": {
+                                        "type": "integer",
+                                        "description": "Maximum number of people to enrich. Default is 50.",
+                                        "minimum": 1,
+                                        "maximum": 1000,
+                                        "default": 50
+                                    },
+                                    "maxConcurrency": {
+                                        "type": "integer",
+                                        "description": "How many Tomba requests run in parallel. There is no rate limit, so raise it for large lists.",
+                                        "minimum": 1,
+                                        "maximum": 50,
+                                        "default": 10
+                                    },
+                                    "maxRetries": {
+                                        "type": "integer",
+                                        "description": "How many times to retry a request after a network error, 429 or 5xx response (exponential backoff). Failed requests are never charged.",
+                                        "minimum": 0,
+                                        "maximum": 10,
+                                        "default": 3
+                                    },
+                                    "useCache": {
+                                        "type": "boolean",
+                                        "description": "Reuse results from previous runs for identical requests. Cached results are free.",
+                                        "default": true
+                                    },
+                                    "cacheTtlHours": {
+                                        "type": "integer",
+                                        "description": "How long cached results stay valid. 0 disables the cross-run cache.",
+                                        "minimum": 0,
+                                        "maximum": 720,
+                                        "default": 24
+                                    }
+                                },
+                                "required": ["emails"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Results"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Error"
+                    },
+                    "402": {
+                        "$ref": "#/components/responses/Error"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "responses": {
+            "Results": {
+                "description": "Person profiles, one per email, in the same format as the dataset items.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Person"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Error": {
+                "description": "Invalid input (400) or the run's max charge limit was reached (402).",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "Person": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Person's name information",
+                        "properties": {
+                            "fullName": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Full name of the person"
+                            },
+                            "givenName": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "First name"
+                            },
+                            "familyName": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Last name"
+                            }
+                        }
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "Input email (normalized)"
+                    },
+                    "location": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Person's location code"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Person's gender"
+                    },
+                    "geo": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Geographic information",
+                        "properties": {
+                            "city": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "City"
+                            },
+                            "state": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "State or province"
+                            },
+                            "country": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Country name"
+                            },
+                            "countryCode": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "ISO country code"
+                            }
+                        }
+                    },
+                    "employment": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Employment information",
+                        "properties": {
+                            "domain": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Company domain"
+                            },
+                            "name": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Company name"
+                            },
+                            "title": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Job title"
+                            },
+                            "role": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Role level (e.g., executive, senior, etc.)"
+                            },
+                            "department": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Department or division"
+                            },
+                            "seniority": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Seniority level"
+                            }
+                        }
+                    },
+                    "linkedin": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "LinkedIn profile information",
+                        "properties": {
+                            "handle": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "LinkedIn profile URL"
+                            }
+                        }
+                    },
+                    "twitter": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Twitter profile information",
+                        "properties": {
+                            "handle": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Twitter profile URL"
+                            }
+                        }
+                    },
+                    "facebook": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Facebook profile information",
+                        "properties": {
+                            "handle": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Facebook profile URL"
+                            }
+                        }
+                    },
+                    "verification": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Email verification information",
+                        "properties": {
+                            "date": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Verification date"
+                            },
+                            "status": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Verification status (valid, invalid, risky, etc.)"
+                            }
+                        }
+                    },
+                    "phone": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "description": "Whether phone number is available"
+                    },
+                    "avatar": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Profile picture URL"
+                    },
+                    "bio": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Personal bio or description"
+                    },
+                    "website": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Personal website URL"
+                    },
+                    "indexedAt": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Date and time when the data was indexed"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "Why no data was returned"
+                    },
+                    "charged": {
+                        "type": "boolean",
+                        "description": "Whether this result was charged"
+                    },
+                    "cached": {
+                        "type": "boolean",
+                        "description": "Whether this result came from the cache (free)"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -17,6 +17,9 @@ All notable changes to this project will be documented in this file. See [standa
 - Resume after migration or restart
 - Emails are trimmed, lowercased and deduplicated
 - Each dataset item now includes `charged` and `cached`; emails with no result now produce an item with `error` instead of being skipped
+- Real-time API (Standby mode): `GET /?email=…` or `POST /` with the run input returns `{ items }` instantly; OpenAPI description in `.actor/web_server_schema.json`
+- Key-value store schema (`INPUT`, `TOMBA_STATE`)
+- Default memory set to 256 MB
 
 ### Dependencies
 
