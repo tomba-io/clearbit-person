@@ -3,7 +3,7 @@
     "name": "clearbit-person",
     "title": "Tomba Clearbit-Person",
     "description": "Tomba integration for Clearbit Person API.",
-    "version": "0.1",
+    "version": "1.0",
     "buildTag": "latest",
     "meta": {
         "templateId": "ts-empty"
@@ -13,5 +13,9 @@
     "output": "./output_schema.json",
     "storages": {
         "dataset": "./dataset_schema.json"
+    },
+    "environmentVariables": {
+        "TOMBA_API_KEY": "@tombaApiKey",
+        "TOMBA_API_SECRET": "@tombaApiSecret"
     }
 }

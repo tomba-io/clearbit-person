@@ -157,6 +157,14 @@
             "error": {
                 "type": "string",
                 "description": "Error message if enrichment failed"
+            },
+            "charged": {
+                "type": "boolean",
+                "description": "Whether this request was charged (pay-per-event)"
+            },
+            "cached": {
+                "type": "boolean",
+                "description": "Whether the result came from the cache (free)"
             }
         }
     }
